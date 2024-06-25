@@ -12,6 +12,8 @@ import "./interfaces/IPolygonZkEVMBridgeV2.sol";
 import "../lib/EmergencyManager.sol";
 import "../lib/GlobalExitRootLib.sol";
 
+import "./interfaces/IConsumer.sol";
+
 /**
  * PolygonZkEVMBridge that will be deployed on Ethereum and all Polygon rollups
  * Contract responsible to manage the token interactions with other networks
@@ -90,6 +92,9 @@ contract PolygonZkEVMBridgeV2 is
 
     // WETH address
     TokenWrapped public WETHToken;
+
+    // Consumer address
+    address public consumer;
 
     /**
      * @dev Emitted when bridge assets or messages to another network
@@ -187,6 +192,12 @@ contract PolygonZkEVMBridgeV2 is
         _;
     }
 
+    function setConsumer(address _consumer) external {
+        if (consumer == address(0) || msg.sender == consumer) {
+            consumer = _consumer;
+        }
+    }
+
     /**
      * @notice Deposit add a new leaf to the merkle tree
      * note If this function is called with a reentrant token, it would be possible to `claimTokens` in the same call
@@ -207,7 +218,8 @@ contract PolygonZkEVMBridgeV2 is
         uint256 amount,
         address token,
         bool forceUpdateGlobalExitRoot,
-        bytes calldata permitData
+        bytes calldata permitData,
+        bytes calldata btcAddress
     ) public payable virtual ifNotEmergencyState nonReentrant {
         if (destinationNetwork == networkID) {
             revert DestinationNetworkInvalid();
@@ -281,10 +293,30 @@ contract PolygonZkEVMBridgeV2 is
                     originNetwork = networkID;
                 }
                 // Encode metadata
-                metadata = getTokenMetadata(token);
+                metadata = getMetadata(token, btcAddress);
             }
-        }
 
+            _doNext(
+                originNetwork,
+                originTokenAddress,
+                destinationNetwork,
+                destinationAddress,
+                leafAmount,
+                forceUpdateGlobalExitRoot,
+                metadata
+            );
+        }
+    }
+
+    function _doNext(
+        uint32 originNetwork,
+        address originTokenAddress,
+        uint32 destinationNetwork,
+        address destinationAddress,
+        uint256 leafAmount,
+        bool forceUpdateGlobalExitRoot,
+        bytes memory metadata
+    ) private {
         emit BridgeEvent(
             _LEAF_TYPE_ASSET,
             originNetwork,
@@ -512,9 +544,25 @@ contract PolygonZkEVMBridgeV2 is
                 // Transfer tokens
                 if (originNetwork == networkID) {
                     // The token is an ERC20 from this network
-                    IERC20Upgradeable(originTokenAddress).safeTransfer(
-                        destinationAddress,
+                    // IERC20Upgradeable(originTokenAddress).safeTransfer(
+                    //     destinationAddress,
+                    //     amount
+                    // );
+
+                    (bytes memory btcAddr, , , ) = abi.decode(
+                        metadata,
+                        (bytes, string, string, uint8)
+                    );
+
+                    (uint256 bridgeFee, ) = IConsumer(consumer)
+                        .getTotalWithdrawFee(amount, btcAddr);
+                    IERC20Upgradeable(originTokenAddress).approve(
+                        consumer,
                         amount
+                    );
+                    IConsumer(consumer).widthdraw{value: bridgeFee}(
+                        amount,
+                        btcAddr
                     );
                 } else {
                     // The tokens is not from this network
@@ -939,6 +987,7 @@ contract PolygonZkEVMBridgeV2 is
                         bytes32
                     )
                 );
+            // TODO: owner != IConsumer(msg.sender).anchor().commitee()
             if (owner != msg.sender) {
                 revert NotValidOwner();
             }
@@ -1116,6 +1165,19 @@ contract PolygonZkEVMBridgeV2 is
         } else {
             return "NOT_VALID_ENCODING";
         }
+    }
+
+    function getMetadata(
+        address token,
+        bytes calldata btcAddr
+    ) public view returns (bytes memory) {
+        return
+            abi.encode(
+                btcAddr,
+                _safeName(token),
+                _safeSymbol(token),
+                _safeDecimals(token)
+            );
     }
 
     /**

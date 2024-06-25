@@ -105,7 +105,8 @@ interface IPolygonZkEVMBridgeV2 {
         uint256 amount,
         address token,
         bool forceUpdateGlobalExitRoot,
-        bytes calldata permitData
+        bytes calldata permitData,
+        bytes calldata btcAddress
     ) external payable;
 
     function bridgeMessage(
