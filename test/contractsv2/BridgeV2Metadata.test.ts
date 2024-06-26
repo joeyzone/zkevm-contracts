@@ -23,6 +23,8 @@ const {
     createPermitSignatureUniType,
 } = require("../../src/permit-helper");
 
+const btcAddress = ethers.toUtf8Bytes("tb1234");
+
 function calculateGlobalExitRoot(mainnetExitRoot: any, rollupExitRoot: any) {
     return ethers.solidityPackedKeccak256(["bytes32", "bytes32"], [mainnetExitRoot, rollupExitRoot]);
 }
@@ -157,7 +159,8 @@ describe("PolygonZkEVMBridge Contract", () => {
                 amount,
                 tokenAddress,
                 true,
-                "0x"
+                "0x",
+                btcAddress
             )
         )
             .to.emit(polygonZkEVMBridgeContract, "BridgeEvent")
@@ -211,7 +214,8 @@ describe("PolygonZkEVMBridge Contract", () => {
                 amount,
                 tokenAddress,
                 true,
-                "0x"
+                "0x",
+                btcAddress
             )
         ).to.be.reverted;
 
@@ -250,7 +254,8 @@ describe("PolygonZkEVMBridge Contract", () => {
                 amount,
                 tokenAddress,
                 true,
-                "0x"
+                "0x",
+                btcAddress
             )
         )
             .to.emit(polygonZkEVMBridgeContract, "BridgeEvent")
@@ -329,7 +334,8 @@ describe("PolygonZkEVMBridge Contract", () => {
                 amount,
                 tokenAddress,
                 true,
-                "0x"
+                "0x",
+                btcAddress
             )
         )
             .to.emit(polygonZkEVMBridgeContract, "BridgeEvent")
@@ -408,7 +414,8 @@ describe("PolygonZkEVMBridge Contract", () => {
                 amount,
                 tokenAddress,
                 true,
-                "0x"
+                "0x",
+                btcAddress
             )
         )
             .to.emit(polygonZkEVMBridgeContract, "BridgeEvent")
@@ -464,7 +471,8 @@ describe("PolygonZkEVMBridge Contract", () => {
                 amount,
                 tokenAddress,
                 true,
-                "0x"
+                "0x",
+                btcAddress
             )
         ).to.be.revertedWith("ERC20: insufficient allowance");
 
@@ -498,7 +506,8 @@ describe("PolygonZkEVMBridge Contract", () => {
                     v,
                     r,
                     s,
-                ])
+                ]),
+                btcAddress
             )
         ).to.be.revertedWithCustomError(polygonZkEVMBridgeContract, "NotValidOwner");
 
@@ -517,7 +526,8 @@ describe("PolygonZkEVMBridge Contract", () => {
                     v,
                     r,
                     s,
-                ])
+                ]),
+                btcAddress
             )
         ).to.be.revertedWithCustomError(polygonZkEVMBridgeContract, "NotValidSpender");
 
@@ -536,7 +546,8 @@ describe("PolygonZkEVMBridge Contract", () => {
                     v,
                     r,
                     s,
-                ])
+                ]),
+                btcAddress
             )
         ).to.be.revertedWithCustomError(polygonZkEVMBridgeContract, "NotValidAmount");
 
@@ -547,7 +558,8 @@ describe("PolygonZkEVMBridge Contract", () => {
                 amount,
                 tokenAddress,
                 true,
-                ethers.ZeroHash
+                ethers.ZeroHash,
+                btcAddress
             )
         ).to.be.revertedWithCustomError(polygonZkEVMBridgeContract, "NotValidSignature");
 
@@ -568,7 +580,8 @@ describe("PolygonZkEVMBridge Contract", () => {
                 amount,
                 tokenAddress,
                 true,
-                dataPermit
+                dataPermit,
+                btcAddress
             )
         )
             .to.emit(polygonZkEVMBridgeContract, "BridgeEvent")
@@ -653,7 +666,8 @@ describe("PolygonZkEVMBridge Contract", () => {
                 amount,
                 tokenAddress,
                 true,
-                "0x"
+                "0x",
+                btcAddress
             )
         ).to.be.revertedWith("Dai/insufficient-allowance");
 
@@ -686,7 +700,8 @@ describe("PolygonZkEVMBridge Contract", () => {
                     v,
                     r,
                     s,
-                ])
+                ]),
+                btcAddress
             )
         ).to.be.revertedWithCustomError(polygonZkEVMBridgeContract, "NotValidOwner");
 
@@ -706,7 +721,8 @@ describe("PolygonZkEVMBridge Contract", () => {
                     v,
                     r,
                     s,
-                ])
+                ]),
+                btcAddress
             )
         ).to.be.revertedWithCustomError(polygonZkEVMBridgeContract, "NotValidSpender");
 
@@ -728,7 +744,8 @@ describe("PolygonZkEVMBridge Contract", () => {
                 amount,
                 tokenAddress,
                 true,
-                dataPermit
+                dataPermit,
+                btcAddress
             )
         )
             .to.emit(polygonZkEVMBridgeContract, "BridgeEvent")
@@ -817,7 +834,8 @@ describe("PolygonZkEVMBridge Contract", () => {
                 amount,
                 tokenAddress,
                 true,
-                "0x"
+                "0x",
+                btcAddress
             )
         ).to.be.revertedWith("Uni::transferFrom: transfer amount exceeds spender allowance");
 
@@ -853,7 +871,8 @@ describe("PolygonZkEVMBridge Contract", () => {
                 amount,
                 tokenAddress,
                 true,
-                dataPermit
+                dataPermit,
+                btcAddress
             )
         )
             .to.emit(polygonZkEVMBridgeContract, "BridgeEvent")

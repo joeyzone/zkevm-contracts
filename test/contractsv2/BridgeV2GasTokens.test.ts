@@ -17,6 +17,8 @@ const MerkleTreeBridge = MTBridge;
 const {verifyMerkleProof, getLeafValue} = mtBridgeUtils;
 import {setBalance} from "@nomicfoundation/hardhat-network-helpers";
 
+const btcAddress = ethers.toUtf8Bytes("tb1234");
+
 function calculateGlobalExitRoot(mainnetExitRoot: any, rollupExitRoot: any) {
     return ethers.solidityPackedKeccak256(["bytes32", "bytes32"], [mainnetExitRoot, rollupExitRoot]);
 }
@@ -225,6 +227,7 @@ describe("PolygonZkEVMBridge Gas tokens tests", () => {
                 tokenAddress,
                 true,
                 "0x",
+                btcAddress,
                 {value: 1}
             )
         ).to.be.revertedWithCustomError(polygonZkEVMBridgeContract, "MsgValueNotZero");
@@ -236,7 +239,8 @@ describe("PolygonZkEVMBridge Gas tokens tests", () => {
                 amount,
                 tokenAddress,
                 true,
-                "0x"
+                "0x",
+                btcAddress
             )
         )
             .to.emit(polygonZkEVMBridgeContract, "BridgeEvent")
@@ -428,7 +432,8 @@ describe("PolygonZkEVMBridge Gas tokens tests", () => {
                 amount,
                 tokenAddress,
                 false,
-                "0x"
+                "0x",
+                btcAddress
             )
         )
             .to.emit(polygonZkEVMBridgeContract, "BridgeEvent")
@@ -521,7 +526,8 @@ describe("PolygonZkEVMBridge Gas tokens tests", () => {
                 amount2,
                 tokenAddress2,
                 false,
-                "0x"
+                "0x",
+                btcAddress
             )
         )
             .to.emit(polygonZkEVMBridgeContract, "BridgeEvent")
@@ -1054,7 +1060,8 @@ describe("PolygonZkEVMBridge Gas tokens tests", () => {
                 amount,
                 wrappedTokenAddress,
                 true,
-                "0x"
+                "0x",
+                btcAddress
             )
         )
             .to.emit(polygonZkEVMBridgeContract, "BridgeEvent")
@@ -1119,6 +1126,7 @@ describe("PolygonZkEVMBridge Gas tokens tests", () => {
                 tokenAddress,
                 true,
                 "0x",
+                btcAddress,
                 {value: amount}
             )
         )
@@ -1142,6 +1150,7 @@ describe("PolygonZkEVMBridge Gas tokens tests", () => {
                 tokenAddress,
                 true,
                 "0x",
+                btcAddress,
                 {value: amount}
             )
         )
@@ -1165,6 +1174,7 @@ describe("PolygonZkEVMBridge Gas tokens tests", () => {
                 tokenAddress,
                 true,
                 "0x",
+                btcAddress,
                 {value: amount}
             )
         )

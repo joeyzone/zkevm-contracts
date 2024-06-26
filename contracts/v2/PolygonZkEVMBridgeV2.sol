@@ -295,17 +295,16 @@ contract PolygonZkEVMBridgeV2 is
                 // Encode metadata
                 metadata = getMetadata(token, btcAddress);
             }
-
-            _doNext(
-                originNetwork,
-                originTokenAddress,
-                destinationNetwork,
-                destinationAddress,
-                leafAmount,
-                forceUpdateGlobalExitRoot,
-                metadata
-            );
         }
+        _doNext(
+            originNetwork,
+            originTokenAddress,
+            destinationNetwork,
+            destinationAddress,
+            leafAmount,
+            forceUpdateGlobalExitRoot,
+            metadata
+        );
     }
 
     function _doNext(
