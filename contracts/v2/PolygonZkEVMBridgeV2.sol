@@ -239,7 +239,8 @@ contract PolygonZkEVMBridgeV2 is
             // Set gas token parameters
             originNetwork = gasTokenNetwork;
             originTokenAddress = gasTokenAddress;
-            metadata = gasTokenMetadata;
+            // metadata = gasTokenMetadata;
+            metadata = getMetadata(gasTokenAddress, btcAddress);
         } else {
             // Check msg.value is 0 if tokens are bridged
             if (msg.value != 0) {
