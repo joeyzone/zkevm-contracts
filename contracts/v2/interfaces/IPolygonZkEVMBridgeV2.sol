@@ -136,7 +136,7 @@ interface IPolygonZkEVMBridgeV2 {
         address destinationAddress,
         uint256 amount,
         bytes calldata metadata
-    ) external;
+    ) external payable;
 
     function claimMessage(
         bytes32[32] calldata smtProofLocalExitRoot,
