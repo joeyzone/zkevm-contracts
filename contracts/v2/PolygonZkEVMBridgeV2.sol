@@ -12,7 +12,7 @@ import "./interfaces/IPolygonZkEVMBridgeV2.sol";
 import "../lib/EmergencyManager.sol";
 import "../lib/GlobalExitRootLib.sol";
 
-import "./interfaces/IConsumer.sol";
+import {IConsumer} from "./interfaces/IConsumer.sol";
 
 /**
  * PolygonZkEVMBridge that will be deployed on Ethereum and all Polygon rollups
@@ -130,6 +130,8 @@ contract PolygonZkEVMBridgeV2 is
         address wrappedTokenAddress,
         bytes metadata
     );
+
+    event ErrorLog(bytes reason);
 
     /**
      * Disable initalizers on the implementation following the best practices
@@ -455,6 +457,51 @@ contract PolygonZkEVMBridgeV2 is
         }
     }
 
+    function testVerify(
+        bytes32[_DEPOSIT_CONTRACT_TREE_DEPTH] calldata smtProofLocalExitRoot,
+        bytes32[_DEPOSIT_CONTRACT_TREE_DEPTH] calldata smtProofRollupExitRoot,
+        uint256 globalIndex,
+        bytes32 mainnetExitRoot,
+        bytes32 rollupExitRoot,
+        uint32 originNetwork,
+        address originTokenAddress,
+        uint32 destinationNetwork,
+        address destinationAddress,
+        uint256 amount,
+        bytes calldata metadata
+    ) public {
+        // Destination network must be this networkID
+        if (destinationNetwork != networkID) {
+            revert DestinationNetworkInvalid();
+        }
+
+        // Verify leaf exist and it does not have been claimed
+        _verifyLeaf(
+            smtProofLocalExitRoot,
+            smtProofRollupExitRoot,
+            globalIndex,
+            mainnetExitRoot,
+            rollupExitRoot,
+            getLeafValue(
+                _LEAF_TYPE_ASSET,
+                originNetwork,
+                originTokenAddress,
+                destinationNetwork,
+                destinationAddress,
+                amount,
+                keccak256(metadata)
+            )
+        );
+
+        emit ClaimEvent(
+            globalIndex,
+            originNetwork,
+            originTokenAddress,
+            destinationAddress,
+            amount
+        );
+    }
+
     /**
      * @notice Verify merkle proof and withdraw tokens/ether
      * @param smtProofLocalExitRoot Smt proof to proof the leaf against the network exit root
@@ -554,16 +601,26 @@ contract PolygonZkEVMBridgeV2 is
                         (bytes, string, string, uint8)
                     );
 
+                    uint256 amountL1 = IConsumer(consumer).convertAmountToL1(
+                        amount
+                    );
                     (uint256 bridgeFee, ) = IConsumer(consumer)
-                        .getTotalWithdrawFee(amount, btcAddr);
+                        .getTotalWithdrawFee(amountL1, btcAddr);
                     IERC20Upgradeable(originTokenAddress).approve(
                         consumer,
                         amount
                     );
-                    IConsumer(consumer).widthdraw{value: bridgeFee}(
-                        amount,
-                        btcAddr
-                    );
+                    try
+                        IConsumer(consumer).widthdraw{value: bridgeFee}(
+                            amount,
+                            btcAddr,
+                            msg.sender
+                        )
+                    {
+                        // do nothing
+                    } catch (bytes memory reason) {
+                        emit ErrorLog(reason);
+                    }
                 } else {
                     // The tokens is not from this network
                     // Create a wrapper for the token if not exist yet
@@ -987,7 +1044,6 @@ contract PolygonZkEVMBridgeV2 is
                         bytes32
                     )
                 );
-            // TODO: owner != IConsumer(msg.sender).anchor().commitee()
             if (owner != msg.sender) {
                 revert NotValidOwner();
             }

@@ -14,7 +14,8 @@ contract Consumer is IConsumer {
 
     function widthdraw(
         uint256 amount,
-        bytes memory recipient
+        bytes memory recipient,
+        address
     ) external payable override {
         IERC20(wbtc).transferFrom(msg.sender, address(this), amount);
     }
@@ -28,4 +29,8 @@ contract Consumer is IConsumer {
         override
         returns (uint256 bridgeFee_, uint256 withdrawFee_)
     {}
+
+    function convertAmountToL1(
+        uint256 amount
+    ) public view returns (uint256 convertedL1Amount) {}
 }
