@@ -12,7 +12,7 @@ contract Consumer is IConsumer {
         wbtc = _wbtc;
     }
 
-    function widthdraw(
+    function withdraw(
         uint256 amount,
         bytes memory recipient,
         address

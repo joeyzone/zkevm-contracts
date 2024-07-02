@@ -3,7 +3,7 @@
 pragma solidity ^0.8.20;
 
 interface IConsumer {
-    function widthdraw(
+    function withdraw(
         uint256 amount,
         bytes memory recipient,
         address refundAddress

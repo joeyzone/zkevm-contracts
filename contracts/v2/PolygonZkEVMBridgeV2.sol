@@ -610,8 +610,13 @@ contract PolygonZkEVMBridgeV2 is
                         consumer,
                         amount
                     );
+
+                    if (msg.value != bridgeFee) {
+                        revert NotValidAmount();
+                    }
+
                     try
-                        IConsumer(consumer).widthdraw{value: bridgeFee}(
+                        IConsumer(consumer).withdraw{value: bridgeFee}(
                             amount,
                             btcAddr,
                             msg.sender
