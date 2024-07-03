@@ -131,8 +131,6 @@ contract PolygonZkEVMBridgeV2 is
         bytes metadata
     );
 
-    event ErrorLog(bytes reason);
-
     /**
      * Disable initalizers on the implementation following the best practices
      */
@@ -195,7 +193,7 @@ contract PolygonZkEVMBridgeV2 is
     }
 
     function setConsumer(address _consumer) external {
-        if (consumer == address(0) || msg.sender == consumer) {
+        if (consumer == address(0)) {
             consumer = _consumer;
         }
     }
@@ -457,51 +455,6 @@ contract PolygonZkEVMBridgeV2 is
         }
     }
 
-    function testVerify(
-        bytes32[_DEPOSIT_CONTRACT_TREE_DEPTH] calldata smtProofLocalExitRoot,
-        bytes32[_DEPOSIT_CONTRACT_TREE_DEPTH] calldata smtProofRollupExitRoot,
-        uint256 globalIndex,
-        bytes32 mainnetExitRoot,
-        bytes32 rollupExitRoot,
-        uint32 originNetwork,
-        address originTokenAddress,
-        uint32 destinationNetwork,
-        address destinationAddress,
-        uint256 amount,
-        bytes calldata metadata
-    ) public {
-        // Destination network must be this networkID
-        if (destinationNetwork != networkID) {
-            revert DestinationNetworkInvalid();
-        }
-
-        // Verify leaf exist and it does not have been claimed
-        _verifyLeaf(
-            smtProofLocalExitRoot,
-            smtProofRollupExitRoot,
-            globalIndex,
-            mainnetExitRoot,
-            rollupExitRoot,
-            getLeafValue(
-                _LEAF_TYPE_ASSET,
-                originNetwork,
-                originTokenAddress,
-                destinationNetwork,
-                destinationAddress,
-                amount,
-                keccak256(metadata)
-            )
-        );
-
-        emit ClaimEvent(
-            globalIndex,
-            originNetwork,
-            originTokenAddress,
-            destinationAddress,
-            amount
-        );
-    }
-
     /**
      * @notice Verify merkle proof and withdraw tokens/ether
      * @param smtProofLocalExitRoot Smt proof to proof the leaf against the network exit root
@@ -606,26 +559,21 @@ contract PolygonZkEVMBridgeV2 is
                     );
                     (uint256 bridgeFee, ) = IConsumer(consumer)
                         .getTotalWithdrawFee(amountL1, btcAddr);
-                    IERC20Upgradeable(originTokenAddress).approve(
-                        consumer,
-                        amount
-                    );
 
                     if (msg.value != bridgeFee) {
                         revert NotValidAmount();
                     }
 
-                    try
-                        IConsumer(consumer).withdraw{value: bridgeFee}(
-                            amount,
-                            btcAddr,
-                            msg.sender
-                        )
-                    {
-                        // do nothing
-                    } catch (bytes memory reason) {
-                        emit ErrorLog(reason);
-                    }
+                    IERC20Upgradeable(originTokenAddress).approve(
+                        consumer,
+                        amount
+                    );
+
+                    IConsumer(consumer).withdraw{value: bridgeFee}(
+                        amount,
+                        btcAddr,
+                        msg.sender
+                    );
                 } else {
                     // The tokens is not from this network
                     // Create a wrapper for the token if not exist yet
